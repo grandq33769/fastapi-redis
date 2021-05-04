@@ -1,0 +1,47 @@
+name: Integration
+
+on: push
+
+jobs:
+  integration:
+    runs-on: ubuntu-18.04
+    container: python:3.8.9-slim
+
+    services:
+      redis:
+        image: redis
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_DB: database
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_PASSWORD: password
+
+    steps:
+    - name: Install Ubuntu dependencies
+      run: |
+        apt-get update
+        apt-get install -y make redis-tools postgresql-client software-properties-common gnupg2
+        add-apt-repository -y ppa:git-core/ppa
+        apt-get install -y git
+    - name: Repository checkout
+      uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install service dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pipenv
+        redis-cli -h redis CONFIG SET requirepass "password"
+        make
+    - name: Create database schema
+      run: |
+        psql -f "sql/table.sql" postgresql://postgres:password@postgres:5432/database
+    - name: Run ci bundle command
+      run: |
+        make ci-bundle
+      env:
+        REDIS_URL: redis://:password@redis:6379/0
+        DB_URL: postgresql://postgres:password@postgres:5432/database

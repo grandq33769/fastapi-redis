@@ -1,0 +1,22 @@
+repos:
+  - repo: local
+    hooks:
+    - id: make_reformat
+      name: make_reformat
+      entry: make reformat
+      language: system
+      always_run: true
+  - repo: local
+    hooks:
+    - id: make_analysis
+      name: make_analysis
+      entry: make analysis
+      language: system
+      always_run: true
+  - repo: local
+    hooks:
+    - id: make_lint
+      name: make_lint
+      entry: make lint
+      language: system
+      always_run: true
